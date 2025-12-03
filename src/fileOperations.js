@@ -92,8 +92,8 @@ class FileOperations {
 
         try {
             let content = await fs.readFile(fullTemplatePath, 'utf8');
-			 const replaceKey = config.get('templateReplacementKey', '{{myKey}}');
-            content = content.replace(replaceKey, sceneName);
+			const replaceKey = config.get('templateReplacementKey', '{{myKey}}');
+            content = content.split(replaceKey).join(sceneName);
 
             const templateExt = path.extname(fullTemplatePath);
             const newFileName = sceneName + templateExt;
