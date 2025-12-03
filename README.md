@@ -1,6 +1,6 @@
 # Assets Manager for VS Code
 
-**Assets Manager** is a powerful productivity tool designed for game developers (Phaser, WebGL) and web designers. It provides a visual interface to manage your project assets, preview media files, and generate code snippets directly within VS Code.
+**Assets Manager** is a powerful productivity tool designed for game developers and web designers. It provides a visual interface to manage your project assets, preview media files, and generate code snippets directly within VS Code.
 
 ![Assets Manager Preview](images/img1.jpg)
 <!-- Добавьте скриншот общего вида расширения в папку images в корне проекта -->

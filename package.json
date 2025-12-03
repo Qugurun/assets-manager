@@ -1,0 +1,104 @@
+{
+  "name": "assets-manager",
+  "displayName": "Assets Manager",
+  "description": "Interactive assets manager",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Qugurun/assets-manager.git"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization",
+    "Game Development"
+  ],
+  "activationEvents": [
+    "onView:phaserAssetsPanel"
+  ],
+  "main": "./extension.js",
+  "icon": "icons/icon.png",
+  "contributes": {
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "phaserAssets",
+          "title": "Assets",
+          "icon": "$(folder)"
+        }
+      ]
+    },
+    "views": {
+      "phaserAssets": [
+        {
+          "id": "phaserAssetsPanel",
+          "name": "Assets Manager",
+          "type": "webview"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Assets Manager",
+      "properties": {
+        "assetsManager.newScriptExtension": {
+            "type": "string",
+            "default": "js",
+            "description": "File extension for newly created empty scripts (e.g. 'js', 'ts')."
+        },
+        "assetsManager.enableTemplateReplacement": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable prompting for filename and replacing the placeholder key inside the template file."
+        },
+        "assetsManager.templateReplacementKey": {
+            "type": "string",
+            "default": "{{myKey}}",
+            "description": "The key to look for in template files to trigger the rename prompt (e.g., {{myKey}})."
+        },
+        "assetsManager.templatesPath": {
+          "type": "string",
+          "default": "templates",
+          "description": "Path to templates folder (relative to workspace root)"
+        },
+        "assetsManager.fileTemplatePath": {
+            "type": "string",
+            "default": "",
+            "description": "Path to the template file (relative to workspace root). The template's filename determines the context menu label (e.g., \"Create Player\"). If \"Enable Template Replacement\" is active and the replacement key is present, you will be prompted for a name. Otherwise, the file is created automatically using the template's name."
+        },
+        "assetsManager.rootFolders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Root folders to display in TreeView"
+        },
+        "assetsManager.copyKeyIncludeExtension": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include file extension when copying asset key (e.g. 'image.png' vs 'image')."
+        },
+        "assetsManager.panelState": {
+          "type": "object",
+          "default": {
+            "treeWidth": 200,
+            "detailsWidth": 200,
+            "thumbnailSize": 100,
+            "currentFolderPath": "",
+            "expandedNodes": []
+          },
+          "description": "Internal: Panel state (widths, expanded nodes, etc.)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "vsce package --allow-missing-repository --skip-license",
+    "build2": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0"
+  }
+}
