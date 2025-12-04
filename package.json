@@ -2,7 +2,7 @@
   "name": "assets-manager",
   "displayName": "Assets Manager",
   "description": "Interactive assets manager",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "publisher": "Qugurun",
   "repository": {
     "type": "git",
@@ -51,12 +51,12 @@
         "assetsManager.enableTemplateReplacement": {
             "type": "boolean",
             "default": true,
-            "description": "Enable prompting for filename and replacing the placeholder key inside the template file."
+            "description": "Always request a filename when creating from a template. Note: If the template contains the Replacement Key, the name will be requested regardless of this setting."
         },
         "assetsManager.templateReplacementKey": {
             "type": "string",
             "default": "{{myKey}}",
-            "description": "The key to look for in template files to trigger the rename prompt (e.g., {{myKey}})."
+            "description": "The key to look for in template files. If found, you will always be prompted for a name to replace this key."
         },
         "assetsManager.templatesPath": {
           "type": "string",
@@ -66,7 +66,7 @@
         "assetsManager.fileTemplatePath": {
             "type": "string",
             "default": "",
-            "description": "Path to the template file (relative to workspace root). The template's filename determines the context menu label (e.g., \"Create Player\"). If \"Enable Template Replacement\" is active and the replacement key is present, you will be prompted for a name. Otherwise, the file is created automatically using the template's name."
+            "description": "Path to the template file (relative to workspace root)."
         },
         "assetsManager.rootFolders": {
           "type": "array",

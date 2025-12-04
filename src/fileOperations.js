@@ -32,22 +32,42 @@ class FileOperations {
 
     /**
      * Create an empty script file
+     * CHANGED: Now prompts for filename
      */
     async createEmptyScript(folderPath) {
-        // Получаем конфигурацию
         const config = vscode.workspace.getConfiguration('assetsManager');
-        // Получаем расширение, по умолчанию 'js'
         let ext = config.get('newScriptExtension', 'js');
 
-        // Убеждаемся, что расширение начинается с точки
         if (!ext.startsWith('.')) {
             ext = '.' + ext;
         }
 
-        const target = path.join(this._workspaceRoot, folderPath);
-        // Используем полученное расширение (ext) вместо хардкода '.js'
-        const name = await Utils.getIncrementalName(target, 'newScript', ext);
-        await fs.writeFile(path.join(target, name), '');
+        // Запрашиваем имя файла для пустого скрипта
+        const userInput = await vscode.window.showInputBox({
+            prompt: `Enter name for new script (extension ${ext} will be added)`,
+            placeHolder: 'newScript',
+            validateInput: (text) => {
+                if (!text || text.trim() === '') return 'Name cannot be empty';
+                if (/[/\\:?*"<>|]/.test(text)) return 'Invalid characters for filename';
+                return null;
+            }
+        });
+
+        if (!userInput) return;
+
+        const fileName = userInput + ext;
+        const targetDir = path.join(this._workspaceRoot, folderPath);
+        const targetPath = path.join(targetDir, fileName);
+
+        try {
+            await fs.access(targetPath);
+            vscode.window.showErrorMessage(`File "${fileName}" already exists.`);
+            return;
+        } catch(e) { 
+            // File doesn't exist, proceed
+        }
+
+        await fs.writeFile(targetPath, '');
     }
 
     /**
@@ -117,11 +137,13 @@ class FileOperations {
 
     /**
      * Create file from template
+     * CHANGED: Logic for prompting based on key presence OR setting
      */
     async createFromTemplate(folderPath, templateFile) {
         const config = vscode.workspace.getConfiguration('assetsManager');
         
-        const isReplaceEnabled = config.get('enableTemplateReplacement', true);
+        // Эта настройка теперь означает "Запрашивать имя файла" (если ключа нет)
+        const alwaysPromptForName = config.get('enableTemplateReplacement', true);
         const replaceKey = config.get('templateReplacementKey', '{{myKey}}');
         
         const tplDir = config.get('templatesPath', 'templates');
@@ -131,12 +153,26 @@ class FileOperations {
         const templateBaseName = path.parse(templateFile).name;
 
         try {
+            // 1. Сначала читаем контент
             let content = await fs.readFile(fullTplPath, 'utf8');
+            
+            // 2. Проверяем наличие ключа
+            const hasKey = content.includes(replaceKey);
+
+            // 3. Определяем, нужно ли запрашивать ввод у пользователя.
+            // ЛОГИКА: Если есть ключ ИЛИ включена настройка "всегда спрашивать"
+            const shouldPrompt = hasKey || alwaysPromptForName;
+
             let newFileName;
 
-            if (isReplaceEnabled && content.includes(replaceKey)) {
+            if (shouldPrompt) {
+                // Формируем текст подсказки в зависимости от наличия ключа
+                const promptMsg = hasKey 
+                    ? `Enter name for ${templateBaseName} (will replace ${replaceKey})`
+                    : `Enter filename for ${templateBaseName}`;
+
                 const userInput = await vscode.window.showInputBox({
-                    prompt: `Enter name for ${templateBaseName} (will replace ${replaceKey})`,
+                    prompt: promptMsg,
                     placeHolder: templateBaseName,
                     validateInput: (text) => {
                         if (!text || text.trim() === '') return 'Name cannot be empty';
@@ -145,11 +181,16 @@ class FileOperations {
                     }
                 });
 
-                if (!userInput) return;
+                if (!userInput) return; // Пользователь отменил ввод
 
-                content = content.split(replaceKey).join(userInput);
+                // Если ключ был, заменяем его
+                if (hasKey) {
+                    content = content.split(replaceKey).join(userInput);
+                }
+
                 newFileName = userInput + templateExt;
 
+                // Проверка существования при ручном вводе
                 const checkPath = path.join(targetDir, newFileName);
                 try {
                     await fs.access(checkPath);
@@ -158,10 +199,12 @@ class FileOperations {
                 } catch(e) { /* File doesn't exist */ }
 
             } else {
+                // Если не спрашиваем (ключа нет И настройка выключена) -> авто-имя
                 newFileName = await Utils.getIncrementalName(targetDir, templateBaseName, templateExt);
             }
 
             await fs.writeFile(path.join(targetDir, newFileName), content);
+
         } catch(e) { 
             vscode.window.showErrorMessage(`Template error: ${e.message}`); 
         }
@@ -299,5 +342,3 @@ class FileOperations {
 }
 
 module.exports = FileOperations;
-
-

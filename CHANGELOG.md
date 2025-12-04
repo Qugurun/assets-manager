@@ -1,6 +1,16 @@
 # Changelog
 
-## [1.0.0] - 2025-12-04
+## [0.0.3] - 2025-12-05
+### Changed
+- **Script Creation**: Creating an empty script now always prompts for a filename instead of auto-generating `newScript`.
+- **Template Logic**: Improved replacement logic. If a template file contains the replacement key (e.g., `{{myKey}}`), the extension will now **always** prompt for a name, regardless of the user settings.
+- **Settings**: The `assetsManager.enableTemplateReplacement` setting now controls whether to prompt for a filename for templates *without* replacement keys (toggles between manual naming and auto-incremental naming).
+
+## [0.0.2] - 2025-12-04
+### Added
+- Fixed a bug where multiple key replacements didn't work.
+
+## [0.0.1] - 2025-12-04
 ### Added
 - Initial version: visual tree/grid asset browser, audio player with waveforms, smart file templates with variable substitution.
 - Core functionality for browsing and managing asset files inside VS Code.
