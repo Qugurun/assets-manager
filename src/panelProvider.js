@@ -32,6 +32,7 @@ class AssetsPanelProvider {
         this._fileOps = null;
         this._treeOps = null;
     }
+	
 
     resolveWebviewView(webviewView) {
         this._view = webviewView;
@@ -166,13 +167,8 @@ class AssetsPanelProvider {
                 break;
             case 'import':
                 const editor = vscode.window.activeTextEditor;
-                if(editor) {
-                    const ext = path.extname(data.arg);
-                    const basename = path.basename(data.arg, ext);
-                    editor.edit(e => e.insert(
-                        new vscode.Position(0,0), 
-                        `import ${basename} from './${data.arg}';\n`
-                    ));
+                if (editor) {
+                    await this._addImportToTop(editor, data.arg);
                 }
                 break;
             case 'getAudioData':
@@ -206,6 +202,89 @@ class AssetsPanelProvider {
                 }
                 break;
         }
+    }
+	
+	/**
+     * Добавляет импорт относительно текущего открытого файла.
+     * Убирает расширение и проверяет дубликаты.
+     */
+    async _addImportToTop(editor, projectRelativePath) {
+        // 1. Получаем абсолютные пути
+        // projectRelativePath - это путь от корня проекта (например: src/scenes/Game.js)
+        const targetAbsPath = path.join(this._workspaceRoot, projectRelativePath);
+        const activeFileDir = path.dirname(editor.document.uri.fsPath);
+
+        // 2. Вычисляем относительный путь от активного файла к целевому
+        let relativePath = path.relative(activeFileDir, targetAbsPath);
+
+        // 3. Нормализация пути (Windows backslashes -> Forward slashes)
+        relativePath = relativePath.split(path.sep).join('/');
+
+        // 4. Если файл в той же папке, path.relative вернет просто "Game.js",
+        // но для импорта нужно "./Game.js". Добавляем ./ если нет точки в начале.
+        if (!relativePath.startsWith('.')) {
+            relativePath = './' + relativePath;
+        }
+
+        // 5. Убираем расширение
+        const ext = path.extname(relativePath);
+        // ./scenes/Game.js -> ./scenes/Game
+        const importPath = relativePath.slice(0, -ext.length);
+
+        // 6. Имя переменной берем из имени файла (Game.js -> Game)
+        const variableName = path.basename(projectRelativePath, path.extname(projectRelativePath));
+
+        // Формируем строку импорта
+        const importStatement = `import ${variableName} from '${importPath}';`;
+
+        // --- Дальше логика проверки и вставки остается прежней ---
+
+        const document = editor.document;
+        const docText = document.getText();
+        
+        // Экранируем для RegExp
+        const escapedPath = importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        // Паттерны для поиска (учитываем возможные расширения в существующих импортах)
+        const importPatterns = [
+            new RegExp(`from\\s+['"]${escapedPath}(?:\\.\\w+)?['"]`),
+            new RegExp(`import\\s*\\(['"]${escapedPath}(?:\\.\\w+)?['"]\\)`),
+            new RegExp(`require\\s*\\(['"]${escapedPath}(?:\\.\\w+)?['"]\\)`)
+        ];
+
+        const isDuplicate = importPatterns.some(regex => regex.test(docText));
+
+        if (isDuplicate) {
+            vscode.window.showInformationMessage(`Module "${variableName}" is already imported.`);
+            return; 
+        }
+
+        // Поиск позиции для вставки
+        let lastImportLine = -1;
+        for (let i = 0; i < document.lineCount; i++) {
+            const lineText = document.lineAt(i).text.trim();
+            if (!lineText || lineText.startsWith('//') || lineText.startsWith('/*')) continue;
+
+            if (lineText.startsWith('import ') || lineText.startsWith('require(')) {
+                lastImportLine = i;
+            } else if (lastImportLine >= 0) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        let insertPosition;
+        if (lastImportLine >= 0) {
+            insertPosition = document.lineAt(lastImportLine).range.end;
+        } else {
+            insertPosition = new vscode.Position(0, 0);
+        }
+
+        await editor.edit(editBuilder => {
+            const textToInsert = lastImportLine >= 0 ? `\n${importStatement}` : `${importStatement}\n`;
+            editBuilder.insert(insertPosition, textToInsert);
+        });
     }
 
     async _initialize() {

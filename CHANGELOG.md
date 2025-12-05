@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.4] - 2025-12-05
+### Improved
+- **Smart Imports**: Refactored the file import functionality.
+    - Import paths are now generated **relative to the currently open file** (e.g., `./scenes/Player`) instead of the project root.
+    - File extensions are automatically removed from the generated import path.
+    - improved insertion logic: new imports are placed after the last existing import statement.
+    - Added duplicate detection: prevents adding the same module twice by checking against existing `import`, `require`, and dynamic import statements.
+
 ## [0.0.3] - 2025-12-05
 ### Changed
 - **Script Creation**: Creating an empty script now always prompts for a filename instead of auto-generating `newScript`.

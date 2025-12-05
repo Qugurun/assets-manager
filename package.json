@@ -2,7 +2,7 @@
   "name": "assets-manager",
   "displayName": "Assets Manager",
   "description": "Interactive assets manager",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "Qugurun",
   "repository": {
     "type": "git",
